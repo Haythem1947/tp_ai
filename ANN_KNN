@@ -1,0 +1,101 @@
+# ANN
+# Import necessary libraries
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Dropout
+from tensorflow.keras.utils import to_categorical
+import matplotlib.pyplot as plt
+
+# Load the dataset
+file_path = "iris_label.xlsx"
+df = pd.read_excel(file_path)
+
+# Step 1: Preprocess the data
+X = df.drop('species', axis=1)  # Features: Sepal and Petal dimensions
+y = df['species']  # Target: Species
+
+# Encode the species column to integers
+label_encoder = LabelEncoder()
+y_encoded = label_encoder.fit_transform(y)  # Convert string labels to numeric
+y_categorical = to_categorical(y_encoded, num_classes=3)  # One-hot encode the labels
+
+# Normalize the feature data
+scaler = StandardScaler()
+X_normalized = scaler.fit_transform(X)
+
+# Step 4: Visualize the data distribution
+
+plt.figure(figsize=(7, 5))
+plt.scatter(X.values[:, 0], X.values[:, 1], c=y_encoded, cmap='viridis')  # Sepal length vs Sepal width
+clb = plt.colorbar()
+clb.ax.set_yticks([0, 1, 2], labels=label_encoder.classes_)
+plt.xlabel('Sepal length (cm)')
+plt.ylabel('Sepal width (cm)')
+plt.title("Scatter plot of Sepal Length vs Sepal Width")
+plt.tight_layout()
+plt.show()
+
+# Split the data into train and test sets
+X_train, X_test, y_train, y_test = train_test_split(X_normalized, y_categorical, test_size=0.2, random_state=42)
+
+# Step 2: Build the neural network model
+model = Sequential()
+model.add(Dense(10, input_dim=4, activation='relu'))  # Input layer + first hidden layer
+model.add(Dense(10, activation='relu'))  # Second hidden layer
+model.add(Dropout(0.2))  # Dropout for regularization
+model.add(Dense(3, activation='softmax'))  # Output layer for 3 classes
+
+# Step 3:Compile the model
+
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+# Print model summary
+model.summary()
+
+# Step 3: Train the model
+
+history = model.fit(X_train, y_train, epochs=200, batch_size=5, verbose=2, validation_split=0.2)
+
+# Step 5: Evaluate the model
+test_loss, test_accuracy = model.evaluate(X_test, y_test, verbose=0)
+print(f"\nTest Accuracy: {test_accuracy:.2f}")
+
+# Step 7: Create an evaluation table
+from sklearn.metrics import classification_report, confusion_matrix
+
+# Predict classes on the test set
+y_pred = model.predict(X_test)
+y_pred_classes = np.argmax(y_pred, axis=1)  # Convert probabilities to class predictions
+y_true_classes = np.argmax(y_test, axis=1)  # Convert one-hot encoded labels to class indices
+
+# Print the classification report
+print("\nClassification Report:")
+print(classification_report(y_true_classes, y_pred_classes, target_names=label_encoder.classes_))
+
+# Print the confusion matrix
+print("\nConfusion Matrix:")
+print(confusion_matrix(y_true_classes, y_pred_classes))
+print("\n")
+print("\n")
+# Plot training and validation accuracy
+plt.figure(figsize=(8, 5))
+plt.plot(history.history['accuracy'], label='Training Accuracy')
+plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
+plt.xlabel('Epochs')
+plt.ylabel('Accuracy')
+plt.title('Training and Validation Accuracy')
+plt.legend()
+plt.show()
+
+# Plot training and validation loss
+plt.figure(figsize=(8, 5))
+plt.plot(history.history['loss'], label='Training Loss')
+plt.plot(history.history['val_loss'], label='Validation Loss')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.title('Training and Validation Loss')
+plt.legend()
+plt.show()
