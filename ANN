@@ -63,7 +63,7 @@ history = model.fit(X_train, y_train, epochs=200, batch_size=5, verbose=2, valid
 test_loss, test_accuracy = model.evaluate(X_test, y_test, verbose=0)
 print(f"\nTest Accuracy: {test_accuracy:.2f}")
 
-# Step 7: Create an evaluation table
+# Create an evaluation table
 from sklearn.metrics import classification_report, confusion_matrix
 
 # Predict classes on the test set
